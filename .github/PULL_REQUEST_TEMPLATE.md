@@ -12,13 +12,6 @@
 
 <!--- Why is this change required? What problem does it solve? -->
 
-### Type of changes
-
-- [ ] Add new module
-- [ ] Update existing module
-- [ ] Remove existing module
-- [ ] Other
-
 ### Does this introduce a breaking change?
 
 - [ ] Yes
