@@ -1,4 +1,23 @@
-# terraform-aws-githubrunner<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+# terraform-aws-githubrunner
+
+Terraform module for provisioning a GitHub runner definition as ECS task definition.
+The task can be executed with visibility in a VPC via dedicated security group.
+
+This module will create:
+
+- ECS task definition for the runner
+- Optionally, ECS cluster in which to run the task
+- ECR repository for the runner image
+- Log group in CloudWatch for monitoring runner logs
+- Role for the runner with any number of policies passed as vars
+- Security group in a VPC specificied
+- Role for federated authentication for GitHub to run the task as runner
+
+## Examples
+
+See the [examples](examples/) folder for same examples of usage of this module.
+
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
 | Name | Version |
