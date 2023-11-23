@@ -4,5 +4,5 @@ output "security_group_id" {
 }
 
 output "github_iam_role_arn" {
-  value = aws_iam_role.githubiac.arn
+  value = aws_iam_role.github_iac.arn
 }
