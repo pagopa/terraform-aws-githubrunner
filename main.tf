@@ -140,11 +140,11 @@ resource "aws_security_group_rule" "github_runner_to_internet" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-# federated role for github
-resource "aws_iam_role" "githubiac" {
+# Role for federating Github access for running the ECS task of the runner
+
+resource "aws_iam_role" "github_iac" {
   name        = "GitHubActionIACRole"
   description = "Role to assume to create the infrastructure."
-
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -169,12 +169,29 @@ resource "aws_iam_role" "githubiac" {
   })
 }
 
-data "aws_iam_policy" "admin_access" {
-  # FIXME!!! granular permission, least privilege
-  name = "AdministratorAccess"
+resource "aws_iam_policy" "run_github_runner_ecs_task" {
+  name        = "RunGithubRunnerEcsTask"
+  description = "Policy for running the GitHub runner in ECS"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "ecr"
+        Effect = "Allow",
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+        ],
+        Resource = [aws_ecs_task_definition.github_runner_def.arn]
+      },
+    ]
+  })
 }
 
-resource "aws_iam_role_policy_attachment" "githubiac" {
-  role       = aws_iam_role.githubiac.name
-  policy_arn = data.aws_iam_policy.admin_access.arn
+resource "aws_iam_role_policy_attachment" "github_iac" {
+  role       = aws_iam_role.github_iac.name
+  policy_arn = aws_iam_policy.run_github_runner_ecs_task.arn
 }

@@ -1,5 +1,4 @@
 
-
 module "aws_githubrunner" {
   source = "../.."
 
@@ -7,4 +6,5 @@ module "aws_githubrunner" {
   ecs_cluster_name      = "ghrunner-cluster"
   security_group_vpc_id = aws_vpc.main.id
   iam_policy_arns       = [aws_iam_policy.invoke_lambda.arn]
+  github_repository     = "TBD"
 }
