@@ -51,11 +51,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_app_name"></a> [app\_name](#input\_app\_name) | App name. | `string` | `"ca"` | no |
-| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region to create resources. Default Milan | `string` | `"eu-south-1"` | no |
+| <a name="input_app_name"></a> [app\_name](#input\_app\_name) | Name of the app | `string` | `"ca"` | no |
+| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region to create resources | `string` | `"eu-south-1"` | no |
 | <a name="input_ecs_cluster_name"></a> [ecs\_cluster\_name](#input\_ecs\_cluster\_name) | ECS cluster to create. If not provided, cluster is not created | `string` | `""` | no |
 | <a name="input_ecs_logs_retention_days"></a> [ecs\_logs\_retention\_days](#input\_ecs\_logs\_retention\_days) | ECS log group retention in days | `number` | `5` | no |
-| <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Evnironment short. | `string` | `"d"` | no |
+| <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short | `string` | `"d"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment | `string` | `"dev"` | no |
 | <a name="input_github_repository"></a> [github\_repository](#input\_github\_repository) | GitHub repository of the pipeline that will use the runner | `string` | n/a | yes |
 | <a name="input_github_runner_cpu"></a> [github\_runner\_cpu](#input\_github\_runner\_cpu) | CPU assigned to the Github runner on ECS | `number` | `2048` | no |
@@ -70,6 +70,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_github_iam_role_arn"></a> [github\_iam\_role\_arn](#output\_github\_iam\_role\_arn) | n/a |
-| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | n/a |
+| <a name="output_github_iam_role_arn"></a> [github\_iam\_role\_arn](#output\_github\_iam\_role\_arn) | ARN of the IAM role federated for invoking the runner from a GitHub action |
+| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | ID of the security group for the input VPC |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

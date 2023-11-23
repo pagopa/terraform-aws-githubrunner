@@ -4,13 +4,13 @@ locals {
 
 variable "aws_region" {
   type        = string
-  description = "AWS region to create resources. Default Milan"
+  description = "AWS region to create resources"
   default     = "eu-south-1"
 }
 
 variable "app_name" {
   type        = string
-  description = "App name."
+  description = "Name of the app"
   default     = "ca"
 }
 
@@ -22,7 +22,7 @@ variable "environment" {
 
 variable "env_short" {
   type        = string
-  description = "Evnironment short."
+  description = "Environment short"
   default     = "d"
 }
 
