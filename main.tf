@@ -112,7 +112,7 @@ resource "aws_iam_role_policy_attachment" "role_attachment" {
 resource "aws_security_group" "github_runner" {
   name        = "${local.project}-githubrunner"
   description = "Security group for the Github runner"
-  vpc_id      = var.security_group_vpc_id
+  vpc_id      = var.vpc_id
 }
 
 resource "aws_security_group_rule" "github_runner_to_vault" {

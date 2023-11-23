@@ -16,14 +16,14 @@ variable "app_name" {
 
 variable "environment" {
   type        = string
-  default     = "dev"
   description = "Environment"
+  default     = "dev"
 }
 
 variable "env_short" {
   type        = string
-  default     = "d"
   description = "Evnironment short."
+  default     = "d"
 }
 
 variable "ecs_logs_retention_days" {
@@ -58,13 +58,13 @@ variable "vpc_ids" {
 
 variable "ecs_cluster_name" {
   type        = string
-  description = "ECS cluster to create. If not provided, cluster is not created."
+  description = "ECS cluster to create. If not provided, cluster is not created"
   default     = ""
 }
 
-variable "security_group_vpc_id" {
+variable "vpc_id" {
   type        = string
-  description = "ID of the  TBD"
+  description = "ID of the VPC that the runner will be able to access"
 }
 
 variable "security_group_rules" {
@@ -75,12 +75,14 @@ variable "security_group_rules" {
     protocol    = string
     cidr_blocks = string
   }))
-  default = []
+  description = "Rules to apply to the runner security group"
+  default     = []
 }
 
 variable "iam_policy_arns" {
-  type    = list(string)
-  default = []
+  type        = list(string)
+  description = "ARNs of policies to grant to the runner"
+  default     = []
 }
 
 variable "github_repository" {
