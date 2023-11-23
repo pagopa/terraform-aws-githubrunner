@@ -1,0 +1,21 @@
+{
+  "containerOverrides": [
+    {
+      "name": "cont",
+      "environment": [
+        {
+          "name": "RUNNER_NAME",
+          "value": "run"
+        },
+        {
+          "name": "GITHUB_REPOSITORY",
+          "value": "repo"
+        },
+        {
+          "name": "GITHUB_TOKEN",
+          "value": "tok"
+        }
+      ]
+    }
+  ]
+}
