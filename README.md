@@ -23,6 +23,7 @@ See the [examples](examples/) folder for same examples of usage of this module.
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.6.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.11.0 |
 
 ## Modules
 
