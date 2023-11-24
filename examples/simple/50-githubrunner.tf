@@ -9,5 +9,5 @@ module "aws_githubrunner" {
   github_runner_tag = "1.0"
   ecs_cluster_name  = local.ecs_cluster_name
   vpc_id            = aws_vpc.main.id
-  github_repository = "https://github.com/pagopa/terraform-aws-githubrunner"
+  github_repository = "pagopa/terraform-aws-githubrunner"
 }
