@@ -2,6 +2,7 @@
 module "aws_githubrunner" {
   source = "../.."
 
+  task_name         = "ghrunner"
   github_runner_tag = "1.0"
   ecs_cluster_name  = "ghrunner-cluster"
   vpc_id            = aws_vpc.main.id

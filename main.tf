@@ -48,7 +48,7 @@ resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_capacity" {
 }
 
 resource "aws_ecs_task_definition" "github_runner_def" {
-  family                   = format("%s-githubrunner", local.project)
+  family                   = var.task_name
   execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
   task_role_arn            = aws_iam_role.task_github_runner.arn
   requires_compatibilities = ["FARGATE"]
@@ -110,7 +110,7 @@ resource "aws_iam_role_policy_attachment" "role_attachment" {
 # Security group
 
 resource "aws_security_group" "github_runner" {
-  name        = "${local.project}-githubrunner"
+  name        = var.task_name
   description = "Security group for the Github runner"
   vpc_id      = var.vpc_id
 }

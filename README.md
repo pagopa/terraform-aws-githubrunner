@@ -52,18 +52,16 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_app_name"></a> [app\_name](#input\_app\_name) | Name of the app | `string` | `"ca"` | no |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region to create resources | `string` | `"eu-south-1"` | no |
 | <a name="input_ecs_cluster_name"></a> [ecs\_cluster\_name](#input\_ecs\_cluster\_name) | ECS cluster to create. If not provided, cluster is not created | `string` | `""` | no |
 | <a name="input_ecs_logs_retention_days"></a> [ecs\_logs\_retention\_days](#input\_ecs\_logs\_retention\_days) | ECS log group retention in days | `number` | `5` | no |
-| <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short | `string` | `"d"` | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | Environment | `string` | `"dev"` | no |
 | <a name="input_github_repository"></a> [github\_repository](#input\_github\_repository) | GitHub repository of the pipeline that will use the runner | `string` | n/a | yes |
 | <a name="input_github_runner_cpu"></a> [github\_runner\_cpu](#input\_github\_runner\_cpu) | CPU assigned to the Github runner on ECS | `number` | `2048` | no |
 | <a name="input_github_runner_memory"></a> [github\_runner\_memory](#input\_github\_runner\_memory) | Memory assigned to the Github runner on ECS | `number` | `4096` | no |
 | <a name="input_github_runner_tag"></a> [github\_runner\_tag](#input\_github\_runner\_tag) | Image tag of the Github runner | `string` | n/a | yes |
 | <a name="input_iam_policy_arns"></a> [iam\_policy\_arns](#input\_iam\_policy\_arns) | ARNs of policies to grant to the runner | `list(string)` | `[]` | no |
 | <a name="input_security_group_rules"></a> [security\_group\_rules](#input\_security\_group\_rules) | Rules to apply to the runner security group | <pre>list(object({<br>    name        = string<br>    type        = string<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = string<br>  }))</pre> | `[]` | no |
+| <a name="input_task_name"></a> [task\_name](#input\_task\_name) | Name of the ECS task definition of the GitHub runner | `string` | n/a | yes |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID of the VPC that the runner will be able to access | `string` | n/a | yes |
 | <a name="input_vpc_ids"></a> [vpc\_ids](#input\_vpc\_ids) | List of ids of VPCs that the runner needs to access | `set(string)` | `[]` | no |
 

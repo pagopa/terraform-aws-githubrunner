@@ -1,29 +1,12 @@
-locals {
-  project = format("%s-%s", var.app_name, var.env_short)
-}
-
 variable "aws_region" {
   type        = string
   description = "AWS region to create resources"
   default     = "eu-south-1"
 }
 
-variable "app_name" {
+variable "task_name" {
   type        = string
-  description = "Name of the app"
-  default     = "ca"
-}
-
-variable "environment" {
-  type        = string
-  description = "Environment"
-  default     = "dev"
-}
-
-variable "env_short" {
-  type        = string
-  description = "Environment short"
-  default     = "d"
+  description = "Name of the ECS task definition of the GitHub runner"
 }
 
 variable "ecs_logs_retention_days" {
