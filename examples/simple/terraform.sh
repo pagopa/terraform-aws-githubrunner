@@ -22,7 +22,7 @@ if echo "init plan apply refresh import output state taint destroy" | grep -w $a
     terraform $action -backend-config="./env/$env/backend.tfvars" $other
   elif [ $action = "output" ] || [ $action = "state" ] || [ $action = "taint" ]; then
     # init terraform backend
-    terraform init -reconfigure -backend-config="./env/$env/backend.tfvars"
+    # terraform init -reconfigure -backend-config="./env/$env/backend.tfvars"
     terraform $action $other
   else
     # init terraform backend

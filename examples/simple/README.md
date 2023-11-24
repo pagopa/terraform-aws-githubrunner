@@ -1,7 +1,6 @@
-# terraform-aws-runner: lambda example
+# terraform-aws-runner: Simple example
 
-Example of module usage for provisioning a GitHub runner in ECS that
-can invoke a sample lambda funtion.
+Minimal simple example of module usage.
 
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
