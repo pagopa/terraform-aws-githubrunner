@@ -49,7 +49,7 @@ resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_capacity" {
 
 resource "aws_ecs_task_definition" "github_runner_def" {
   family                   = var.task_name
-  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
+  execution_role_arn       = aws_iam_role.task_execution_github_runner.arn
   task_role_arn            = aws_iam_role.task_github_runner.arn
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
@@ -58,7 +58,7 @@ resource "aws_ecs_task_definition" "github_runner_def" {
 
   container_definitions = jsonencode([
     {
-      name = "githubrunner",
+      name = "github-runner",
       # TODO manage tag!
       image = "${aws_ecr_repository.runner_ecr.repository_url}:${var.github_runner_tag}",
 
@@ -83,14 +83,77 @@ resource "aws_ecs_task_definition" "github_runner_def" {
 
 # Role and policies
 
-resource "aws_iam_role" "task_github_runner" {
-  name = "GithubRunnerRole"
+resource "aws_iam_role" "task_execution_github_runner" {
+  name = "TaskExecutionGithubRunnerRole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action = "sts:AssumeRole", # trusted policy
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "task_execution_github_runner" {
+  name        = "TaskExecutionGithubRunnerPolicy"
+  description = "Policy for ECS execution role"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "ecr"
+        Effect = "Allow",
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+        ],
+        Resource = [aws_ecr_repository.runner_ecr.arn],
+      },
+      {
+        Sid    = "cloudwatch"
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ],
+        Resource = ["*"], # TODO arn del log group
+      },
+      {
+        Sid    = "kms",
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameters",
+          "secretsmanager:GetSecretValue",
+          "kms:Decrypt",
+        ],
+        Resource = ["*"], # TODO arn del log group
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "task_execution" {
+  policy_arn = aws_iam_policy.task_execution_github_runner.arn
+  role       = aws_iam_role.task_execution_github_runner.name
+}
+
+resource "aws_iam_role" "task_github_runner" {
+  name = "TaskGithubRunnerRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
         Effect = "Allow",
         Principal = {
           Service = "ecs-tasks.amazonaws.com"
@@ -177,15 +240,21 @@ resource "aws_iam_policy" "run_github_runner_ecs_task" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid    = "ecr"
         Effect = "Allow",
         Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
+          "ecs:RunTask",
         ],
-        Resource = [aws_ecs_task_definition.github_runner_def.arn]
+        Resource = [aws_ecs_task_definition.github_runner_def.arn],
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "iam:PassRole",
+        ],
+        Resource = [
+          aws_iam_role.task_github_runner.arn,
+          aws_iam_role.task_execution_github_runner.arn,
+        ],
       },
     ]
   })
