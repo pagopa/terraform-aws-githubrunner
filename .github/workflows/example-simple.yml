@@ -41,7 +41,7 @@ jobs:
           iam_role_arn: ${{ vars.IAM_ROLE }}
           ecs_cluster_name: ${{ vars.ECS_CLUSTER_NAME }}
           ecs_task_definition: ${{ vars.ECS_TASK_DEFINITION }}
-          ecs_container_name: githubrunner
+          ecs_container_name: github-runner
           ecs_task_subnet_id: ${{ vars.SUBNET_ID }}
           ecs_task_sec_group: ${{ vars.SEC_GROUP_ID }}
           pat_token: ${{ secrets.BOT_TOKEN }}
@@ -57,11 +57,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      # https://github.com/hashicorp/setup-terraform/issues/84#issuecomment-800515442
-      - name: Install NodeJS as terraform action dep
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
