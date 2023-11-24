@@ -17,8 +17,13 @@ output "ecr_repository_url" {
   description = "URL of the ECR repository of the GitHub runner"
 }
 
-output "ecs_task_definition" {
-  value       = module.aws_githubrunner.ecs_task_definition
+output "ecs_task_definition_family" {
+  value       = module.aws_githubrunner.ecs_task_definition_family
+  description = "ECS task of the runner"
+}
+
+output "ecs_task_definition_arn" {
+  value       = module.aws_githubrunner.ecs_task_definition_arn
   description = "ECS task of the runner"
 }
 
