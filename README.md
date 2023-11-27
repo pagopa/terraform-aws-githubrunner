@@ -13,6 +13,15 @@ This module will create:
 - Security group in a VPC specificied
 - Role for federated authentication for GitHub to run the task as runner
 
+**NOTE**: the VPC in which to run the task must have a NAT Gateway configured.
+
+## Prerequisites
+
+- AWS account
+- GitHub repo
+- **VPC with a NAT Gateway**. This is required because because the runner needs to reach GitHub for
+processing registration.
+
 ## Examples
 
 See the [examples](examples/) folder for same examples of usage of this module.
