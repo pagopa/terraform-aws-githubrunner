@@ -3,6 +3,7 @@ data "aws_caller_identity" "current" {}
 
 # Logs
 
+# log group used by the runner
 resource "aws_cloudwatch_log_group" "ecs_github_runner" {
   name = "github/runners"
 
@@ -13,8 +14,10 @@ resource "aws_cloudwatch_log_group" "ecs_github_runner" {
   }
 }
 
-# ECS task definition for the runner
+#
+## ECS task definition for the runner
 
+# ecr repository of the github runner image
 resource "aws_ecr_repository" "runner_ecr" {
   name                 = "github-runner"
   image_tag_mutability = "MUTABLE"
@@ -25,8 +28,7 @@ resource "aws_ecr_repository" "runner_ecr" {
   }
 }
 
-# TODO When you launch task definition you need network config
-
+# cluster in which to run the task, can be created here or not
 resource "aws_ecs_cluster" "ecs_cluster" {
   count = var.ecs_create_cluster ? 1 : 0
 
@@ -81,10 +83,12 @@ resource "aws_ecs_task_definition" "github_runner_def" {
   }
 }
 
-# Role and policies
+#
+## IAM roles and policies
 
 resource "aws_iam_role" "task_execution_github_runner" {
-  name = "TaskExecutionGithubRunnerRole"
+  name        = "TaskExecutionGithubRunnerRole"
+  description = "Role for executing the Github runner (task execution role)"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -101,12 +105,12 @@ resource "aws_iam_role" "task_execution_github_runner" {
 }
 
 resource "aws_iam_policy" "task_execution_github_runner" {
-  name        = "TaskExecutionGithubRunnerPolicy"
-  description = "Policy for ECS execution role"
+  name = "TaskExecutionGithubRunnerPolicy"
 
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
+      # allow to pull images from ECR
       {
         Sid    = "ecr"
         Effect = "Allow",
@@ -118,6 +122,7 @@ resource "aws_iam_policy" "task_execution_github_runner" {
         ],
         Resource = ["*"],
       },
+      # allow to write logs on CloudWatch
       {
         Sid    = "cloudwatch"
         Effect = "Allow",
@@ -147,7 +152,8 @@ resource "aws_iam_role_policy_attachment" "task_execution" {
 }
 
 resource "aws_iam_role" "task_github_runner" {
-  name = "TaskGithubRunnerRole"
+  name        = "TaskGithubRunnerRole"
+  description = "Role of the Github runner (task role)"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -170,7 +176,8 @@ resource "aws_iam_role_policy_attachment" "role_attachment" {
   role       = aws_iam_role.task_github_runner.name
 }
 
-# Security group
+#
+## Security group
 
 resource "aws_security_group" "github_runner" {
   name        = var.task_name
@@ -178,7 +185,7 @@ resource "aws_security_group" "github_runner" {
   vpc_id      = var.vpc_id
 }
 
-resource "aws_security_group_rule" "github_runner_to_vault" {
+resource "aws_security_group_rule" "github_runner_rule" {
   for_each = {
     for rule in var.security_group_rules : rule.name => rule
   }
@@ -203,15 +210,17 @@ resource "aws_security_group_rule" "github_runner_to_internet" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-# Role for federating Github access for running the ECS task of the runner
+#
+## Role for federating Github access for running the ECS task of the runner
 
+# oidc federation must be already configured in aws
 data "aws_iam_openid_connect_provider" "github_oidc" {
   url = "https://token.actions.githubusercontent.com"
 }
 
 resource "aws_iam_role" "github_iac" {
   name        = "GitHubActionIACRole"
-  description = "Role to assume to create the infrastructure."
+  description = "Role for invoking the TASK, assumed by GitHub with federated oidc credentials."
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -243,6 +252,7 @@ resource "aws_iam_policy" "run_github_runner_ecs_task" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
+      # allow to run task for provisioning Github runner
       {
         Effect = "Allow",
         Action = [
@@ -250,6 +260,7 @@ resource "aws_iam_policy" "run_github_runner_ecs_task" {
         ],
         Resource = [aws_ecs_task_definition.github_runner_def.arn],
       },
+      # allow to stopping task for cleaning up after Github action
       {
         Effect = "Allow",
         Action = [
@@ -257,6 +268,7 @@ resource "aws_iam_policy" "run_github_runner_ecs_task" {
         ],
         Resource = ["arn:aws:ecs:eu-south-1:${data.aws_caller_identity.current.id}:task/${var.ecs_cluster_name}/*"],
       },
+      # the role needs to be passed to the task role and to the task execution role
       {
         Effect = "Allow",
         Action = [

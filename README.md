@@ -19,6 +19,7 @@ This module will create:
 
 - AWS account
 - GitHub repo
+- Identity provider configured in AWS for federated authentication with GitHub ([docs here](https://aws.amazon.com/it/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/)).
 - **VPC with a NAT Gateway**. This is required because because the runner needs to reach GitHub for
 processing registration.
 
