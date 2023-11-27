@@ -46,7 +46,8 @@ jobs:
           ecs_task_sec_group: ${{ vars.SEC_GROUP_ID }}
           pat_token: ${{ secrets.BOT_TOKEN }}
 
-  install_and_run_terraform:
+  list_s3_buckets:
+    name: List S3 buckets
     runs-on: [self-hosted, "run_id:${{ github.run_id }}"]
     environment: dev
     needs: create_runner
@@ -62,6 +63,9 @@ jobs:
         with:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ vars.IAM_ROLE }}
+      - name: List S3 buckets
+        shell: bash
+        run: aws s3 ls
 
   delete_runner:
     name: Delete Self-Hosted Runner
