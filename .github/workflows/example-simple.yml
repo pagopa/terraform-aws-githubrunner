@@ -69,7 +69,7 @@ jobs:
 
   delete_runner:
     name: Delete Self-Hosted Runner
-    needs: [create_runner, install_and_run_terraform]
+    needs: [create_runner, list_s3_buckets]
     strategy:
       matrix:
         index: [1]
