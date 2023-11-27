@@ -11,6 +11,7 @@ module "vpc" {
   public_subnets        = ["172.32.1.0/24"]
   public_subnet_suffix  = "public"
 
+  # NAT Gateway is required for allowing the ECS Task to reach GitHub (needed for registration)
   enable_nat_gateway = true
 
   enable_dns_hostnames          = true
@@ -19,12 +20,6 @@ module "vpc" {
   manage_default_security_group = false
   manage_default_network_acl    = false
   manage_default_route_table    = false
-
-}
-
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = module.vpc.vpc_id
 }
 
 resource "aws_security_group" "vpc_tls" {
