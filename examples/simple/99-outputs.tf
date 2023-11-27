@@ -1,6 +1,7 @@
 
-output "subnet_id" {
-  value = aws_subnet.main.id
+output "subnet_ids" {
+  value       = module.vpc.private_subnets
+  description = "IDs of subnets managed"
 }
 
 output "security_group_id" {

@@ -39,10 +39,16 @@ variable "vpc_ids" {
   default     = []
 }
 
+variable "ecs_create_cluster" {
+  type        = bool
+  description = "Whether to create ECS cluster in which to run the GitHub runner as task"
+  default     = true
+}
+
 variable "ecs_cluster_name" {
   type        = string
-  description = "ECS cluster to create. If not provided, cluster is not created"
-  default     = ""
+  description = "Name of the ECS cluster in which to run the task. Mandatory if 'ecs_create_cluster' is false"
+  default     = "ghrunner-cluster"
 }
 
 variable "vpc_id" {

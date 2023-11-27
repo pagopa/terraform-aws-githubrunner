@@ -28,13 +28,13 @@ resource "aws_ecr_repository" "runner_ecr" {
 # TODO When you launch task definition you need network config
 
 resource "aws_ecs_cluster" "ecs_cluster" {
-  count = var.ecs_cluster_name == "" ? 0 : 1
+  count = var.ecs_create_cluster ? 1 : 0
 
   name = var.ecs_cluster_name
 }
 
 resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_capacity" {
-  count = var.ecs_cluster_name == "" ? 0 : 1
+  count = var.ecs_create_cluster ? 1 : 0
 
   cluster_name = aws_ecs_cluster.ecs_cluster[0].name
 
@@ -116,7 +116,7 @@ resource "aws_iam_policy" "task_execution_github_runner" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
         ],
-        Resource = [aws_ecr_repository.runner_ecr.arn],
+        Resource = ["*"],
       },
       {
         Sid    = "cloudwatch"
@@ -205,6 +205,10 @@ resource "aws_security_group_rule" "github_runner_to_internet" {
 
 # Role for federating Github access for running the ECS task of the runner
 
+data "aws_iam_openid_connect_provider" "github_oidc" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
 resource "aws_iam_role" "github_iac" {
   name        = "GitHubActionIACRole"
   description = "Role to assume to create the infrastructure."
@@ -215,7 +219,7 @@ resource "aws_iam_role" "github_iac" {
       {
         Effect = "Allow",
         Principal = {
-          "Federated" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+          "Federated" : data.aws_iam_openid_connect_provider.github_oidc.arn,
         },
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
@@ -245,6 +249,13 @@ resource "aws_iam_policy" "run_github_runner_ecs_task" {
           "ecs:RunTask",
         ],
         Resource = [aws_ecs_task_definition.github_runner_def.arn],
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ecs:StopTask",
+        ],
+        Resource = ["arn:aws:ecs:eu-south-1:${data.aws_caller_identity.current.id}:task/${var.ecs_cluster_name}/*"],
       },
       {
         Effect = "Allow",
