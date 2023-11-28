@@ -1,6 +1,7 @@
 
 data "aws_caller_identity" "current" {}
 
+
 # Logs
 
 # log group used by the runner
@@ -14,8 +15,8 @@ resource "aws_cloudwatch_log_group" "ecs_github_runner" {
   }
 }
 
-#
-## ECS task definition for the runner
+
+# ECS task definition for the runner
 
 # ecr repository of the github runner image
 resource "aws_ecr_repository" "runner_ecr" {
@@ -83,8 +84,8 @@ resource "aws_ecs_task_definition" "github_runner_def" {
   }
 }
 
-#
-## IAM roles and policies
+
+# IAM roles and policies
 
 resource "aws_iam_role" "task_execution_github_runner" {
   name        = "TaskExecutionGithubRunnerRole"
@@ -132,6 +133,7 @@ resource "aws_iam_policy" "task_execution_github_runner" {
         ],
         Resource = ["*"], # TODO arn del log group
       },
+      # allow kms, required for pulling images from ecr
       {
         Sid    = "kms",
         Effect = "Allow",
@@ -176,8 +178,8 @@ resource "aws_iam_role_policy_attachment" "role_attachment" {
   role       = aws_iam_role.task_github_runner.name
 }
 
-#
-## Security group
+
+# Security group
 
 resource "aws_security_group" "github_runner" {
   name        = var.task_name
@@ -210,8 +212,8 @@ resource "aws_security_group_rule" "github_runner_to_internet" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-#
-## Role for federating Github access for running the ECS task of the runner
+
+# Role for federating Github access for running the ECS task of the runner
 
 # oidc federation must be already configured in aws
 data "aws_iam_openid_connect_provider" "github_oidc" {
