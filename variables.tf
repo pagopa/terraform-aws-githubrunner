@@ -15,7 +15,6 @@ variable "ecs_logs_retention_days" {
   default     = 5
 }
 
-# TODO how to manage tag?
 variable "github_runner_tag" {
   type        = string
   description = "Image tag of the Github runner"
