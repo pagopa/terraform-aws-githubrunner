@@ -29,7 +29,7 @@ inputs:
 
 outputs:
   runner_name:
-    value: ${{ steps.create_github_runner.outputs.RUNNER_NAME }}
+    value: ${{ steps.create_github_runner.outputs.runner_name }}
     description: 'Name of the self-hosted runner'
 
 runs:
@@ -56,7 +56,8 @@ runs:
         TIMESTAMP=$(date +%s)
         RUNNER_NAME="${{ github.run_id }}-${{ matrix.index }}-${TIMESTAMP}"
         GITHUB_REPOSITORY="https://github.com/${{ github.repository }}"
-        echo "RUNNER_NAME=${RUNNER_NAME}" >> $GITHUB_OUTPUT
+        echo "Set output: runner_name=${RUNNER_NAME}"
+        echo "runner_name=${RUNNER_NAME}" >> $GITHUB_OUTPUT
 
         echo "{\"awsvpcConfiguration\":{\"assignPublicIp\":\"DISABLED\",
             \"securityGroups\":[\"${{ inputs.ecs_task_sec_group }}\"],
