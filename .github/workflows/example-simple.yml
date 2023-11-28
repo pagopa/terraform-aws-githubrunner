@@ -25,6 +25,10 @@ jobs:
         index: [1]
       fail-fast: true
     environment: ${{ inputs.environment }}
+    outputs:
+      runner_name:
+        value: ${{ steps.start_runner.outputs.runner_name }}
+        description: 'Name of the self-hosted runner'
 
     steps:
       - name: Checkout
