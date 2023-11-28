@@ -56,23 +56,23 @@ jobs:
         shell: bash
         run: aws s3 ls
 
-  delete_runner:
-    name: Delete Self-Hosted Runner
-    needs: [create_runner, list_s3_buckets]
-    strategy:
-      matrix:
-        index: [1]
-      fail-fast: true
-    if: ${{ always() }}
-    runs-on: ubuntu-22.04
-    environment: dev
+  # delete_runner:
+  #   name: Delete Self-Hosted Runner
+  #   needs: [create_runner, list_s3_buckets]
+  #   strategy:
+  #     matrix:
+  #       index: [1]
+  #     fail-fast: true
+  #   if: ${{ always() }}
+  #   runs-on: ubuntu-22.04
+  #   environment: dev
 
-    steps:
-      - name: Stop Github Runner
-        id: stop_runner
-        uses: pagopa/interop-github-runner-aws-cleanup-action@main
-        with:
-          aws_region: ${{ vars.AWS_REGION }}
-          iam_role_arn: ${{ vars.IAM_ROLE }}
-          ecs_cluster_name: ${{ vars.ECS_CLUSTER_NAME }}
-          pat_token: ${{ secrets.BOT_TOKEN }}
+  #   steps:
+  #     - name: Stop Github Runner
+  #       id: stop_runner
+  #       uses: pagopa/interop-github-runner-aws-cleanup-action@main
+  #       with:
+  #         aws_region: ${{ vars.AWS_REGION }}
+  #         iam_role_arn: ${{ vars.IAM_ROLE }}
+  #         ecs_cluster_name: ${{ vars.ECS_CLUSTER_NAME }}
+  #         pat_token: ${{ secrets.BOT_TOKEN }}
