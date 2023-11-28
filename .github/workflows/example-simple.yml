@@ -48,7 +48,7 @@ jobs:
 
   list_s3_buckets:
     name: List S3 buckets
-    runs-on: [self-hosted, "run_id:${{ github.run_id }}"]
+    runs-on: [self-hosted, "${{ needs.create_runner.outputs.runner_name }}"]
     environment: dev
     needs: create_runner
     steps:
