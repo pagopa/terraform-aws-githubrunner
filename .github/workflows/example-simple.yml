@@ -26,9 +26,7 @@ jobs:
       fail-fast: true
     environment: ${{ inputs.environment }}
     outputs:
-      runner_name:
-        value: ${{ steps.start_runner.outputs.runner_name }}
-        description: 'Name of the self-hosted runner'
+      runner_name: ${{ steps.start_runner.outputs.runner_name }}
 
     steps:
       - name: Checkout
