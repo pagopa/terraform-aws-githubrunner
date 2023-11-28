@@ -57,7 +57,8 @@ runs:
         RUNNER_NAME="${{ github.run_id }}-${{ matrix.index }}-${TIMESTAMP}"
         GITHUB_REPOSITORY="https://github.com/${{ github.repository }}"
         echo "Set output: runner_name=${RUNNER_NAME}"
-        echo "runner_name=${RUNNER_NAME}" >> $GITHUB_OUTPUT
+        # echo "runner_name=${RUNNER_NAME}" >> $GITHUB_OUTPUT
+        echo "::set-output name=runner_name::${RUNNER_NAME}"
 
         echo "{\"awsvpcConfiguration\":{\"assignPublicIp\":\"DISABLED\",
             \"securityGroups\":[\"${{ inputs.ecs_task_sec_group }}\"],
