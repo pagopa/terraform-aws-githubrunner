@@ -61,8 +61,7 @@ resource "aws_ecs_task_definition" "github_runner_def" {
 
   container_definitions = jsonencode([
     {
-      name = "github-runner",
-      # TODO manage tag!
+      name  = "github-runner",
       image = "${aws_ecr_repository.runner_ecr.repository_url}:${var.github_runner_tag}",
 
       logConfiguration = {
@@ -131,7 +130,7 @@ resource "aws_iam_policy" "task_execution_github_runner" {
           "logs:CreateLogStream",
           "logs:PutLogEvents",
         ],
-        Resource = ["*"], # TODO arn del log group
+        Resource = ["*"],
       },
       # allow kms, required for pulling images from ecr
       {
@@ -142,7 +141,7 @@ resource "aws_iam_policy" "task_execution_github_runner" {
           "secretsmanager:GetSecretValue",
           "kms:Decrypt",
         ],
-        Resource = ["*"], # TODO arn del log group
+        Resource = ["*"],
       }
     ]
   })
