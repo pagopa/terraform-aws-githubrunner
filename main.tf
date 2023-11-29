@@ -235,6 +235,12 @@ resource "aws_iam_policy" "run_github_runner_ecs_task" {
         ],
         Resource = ["arn:aws:ecs:eu-south-1:${data.aws_caller_identity.current.id}:task/${var.ecs_cluster_name}/*"],
       },
+      # allow to get resource from tags. needed because we will search task by tag for deleting it
+      {
+        Effect   = "Allow",
+        Action   = ["tag:GetResources"],
+        Resource = ["*"]
+      },
       # the role needs to be passed to the task role and to the task execution role
       {
         Effect = "Allow",
