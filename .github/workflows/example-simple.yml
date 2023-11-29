@@ -72,9 +72,10 @@ jobs:
     steps:
       - name: Stop Github Runner
         id: stop_runner
-        uses: pagopa/interop-github-runner-aws-cleanup-action@main
+        uses: ./.github/workflows/cleanup
         with:
           aws_region: ${{ vars.AWS_REGION }}
           iam_role_arn: ${{ vars.IAM_ROLE }}
           ecs_cluster_name: ${{ vars.ECS_CLUSTER_NAME }}
           pat_token: ${{ secrets.BOT_TOKEN }}
+          runner_name: ${{ needs.create_runner.outputs.runner_name }}
