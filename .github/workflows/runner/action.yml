@@ -57,13 +57,11 @@ runs:
         RUNNER_NAME="${{ github.run_id }}-${{ matrix.index }}-${TIMESTAMP}"
         GITHUB_REPOSITORY="https://github.com/${{ github.repository }}"
         echo "Set output: runner_name=${RUNNER_NAME}"
-        # echo "runner_name=${RUNNER_NAME}" >> $GITHUB_OUTPUT
-        echo "::set-output name=runner_name::${RUNNER_NAME}"
+        echo "runner_name=${RUNNER_NAME}" >> $GITHUB_OUTPUT
 
         echo "{\"awsvpcConfiguration\":{\"assignPublicIp\":\"DISABLED\",
             \"securityGroups\":[\"${{ inputs.ecs_task_sec_group }}\"],
             \"subnets\":[\"${{ inputs.ecs_task_subnet_id }}\"]}}" > network_config.json
-        
         
         echo "{\"containerOverrides\":[{\"name\":\"${{ inputs.ecs_container_name }}\",\"environment\":[
               {\"name\":\"RUNNER_NAME\",\"value\":\"${RUNNER_NAME}\"},
@@ -76,6 +74,7 @@ runs:
           --cluster "${{ inputs.ecs_cluster_name }}" \
           --network-configuration file://./network_config.json \
           --task-definition "${{ inputs.ecs_task_definition }}" \
+          --tags "key=runner_name,value=${RUNNER_NAME}" \
           --overrides file://./overrides.json \
           | jq -r '.tasks[0].taskArn' \
           | cut -d "/" -f 3)
