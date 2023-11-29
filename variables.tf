@@ -18,6 +18,7 @@ variable "ecs_logs_retention_days" {
 variable "github_runner_image" {
   type        = string
   description = "Image of the Github runner"
+  default     = "ghcr.io/pagopa/github-self-hosted-runner-aws:v1.1.0"
 }
 
 variable "github_runner_cpu" {
