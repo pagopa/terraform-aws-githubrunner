@@ -15,9 +15,9 @@ variable "ecs_logs_retention_days" {
   default     = 5
 }
 
-variable "github_runner_tag" {
+variable "github_runner_image" {
   type        = string
-  description = "Image tag of the Github runner"
+  description = "Image of the Github runner"
 }
 
 variable "github_runner_cpu" {

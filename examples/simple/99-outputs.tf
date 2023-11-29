@@ -13,11 +13,6 @@ output "github_iam_role_arn" {
   description = "ARN of the IAM role federated for invoking the runner from a GitHub action"
 }
 
-output "ecr_repository_url" {
-  value       = module.aws_githubrunner.ecr_repository_url
-  description = "URL of the ECR repository of the GitHub runner"
-}
-
 output "ecs_task_definition_family" {
   value       = module.aws_githubrunner.ecs_task_definition_family
   description = "ECS task of the runner"

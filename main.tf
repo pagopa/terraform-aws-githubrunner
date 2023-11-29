@@ -18,17 +18,6 @@ resource "aws_cloudwatch_log_group" "ecs_github_runner" {
 
 # ECS task definition for the runner
 
-# ecr repository of the github runner image
-resource "aws_ecr_repository" "runner_ecr" {
-  name                 = "github-runner"
-  image_tag_mutability = "MUTABLE"
-  force_delete         = true
-
-  image_scanning_configuration {
-    scan_on_push = false
-  }
-}
-
 # cluster in which to run the task, can be created here or not
 resource "aws_ecs_cluster" "ecs_cluster" {
   count = var.ecs_create_cluster ? 1 : 0
@@ -62,7 +51,7 @@ resource "aws_ecs_task_definition" "github_runner_def" {
   container_definitions = jsonencode([
     {
       name  = "github-runner",
-      image = "${aws_ecr_repository.runner_ecr.repository_url}:${var.github_runner_tag}",
+      image = var.github_runner_image
 
       logConfiguration = {
         logDriver = "awslogs",
@@ -110,18 +99,6 @@ resource "aws_iam_policy" "task_execution_github_runner" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-      # allow to pull images from ECR
-      {
-        Sid    = "ecr"
-        Effect = "Allow",
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-        ],
-        Resource = ["*"],
-      },
       # allow to write logs on CloudWatch
       {
         Sid    = "cloudwatch"
@@ -132,17 +109,6 @@ resource "aws_iam_policy" "task_execution_github_runner" {
         ],
         Resource = ["*"],
       },
-      # allow kms, required for pulling images from ecr
-      {
-        Sid    = "kms",
-        Effect = "Allow",
-        Action = [
-          "ssm:GetParameters",
-          "secretsmanager:GetSecretValue",
-          "kms:Decrypt",
-        ],
-        Resource = ["*"],
-      }
     ]
   })
 }
