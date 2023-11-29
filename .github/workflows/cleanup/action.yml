@@ -43,7 +43,7 @@ runs:
           --region ${{ inputs.aws_region }} \
           --resource-type-filters ecs:task \
           --tag-filters Key=runner_name,Values=${{ inputs.runner_name }} \
-          --max-items 1
+          --max-items 1 \
           | jq --raw-output '.ResourceTagMappingList[].ResourceARN')
 
         aws ecs stop-task \
