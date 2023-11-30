@@ -25,6 +25,8 @@ jobs:
         index: [1]
       fail-fast: true
     environment: ${{ inputs.environment }}
+    outputs:
+      runner_name: ${{ steps.start_runner.outputs.runner_name }}
 
     steps:
       - name: Checkout
@@ -46,26 +48,19 @@ jobs:
           ecs_task_sec_group: ${{ vars.SEC_GROUP_ID }}
           pat_token: ${{ secrets.BOT_TOKEN }}
 
-  install_and_run_terraform:
-    runs-on: [self-hosted, "run_id:${{ github.run_id }}"]
+  list_s3_buckets:
+    name: List S3 buckets
+    runs-on: [self-hosted, "${{ needs.create_runner.outputs.runner_name }}"]
     environment: dev
     needs: create_runner
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: ${{ vars.IAM_ROLE }}
+      - name: List S3 buckets
+        shell: bash
+        run: aws s3 ls
 
   delete_runner:
     name: Delete Self-Hosted Runner
-    needs: [create_runner, install_and_run_terraform]
+    needs: [create_runner, list_s3_buckets]
     strategy:
       matrix:
         index: [1]
@@ -75,11 +70,18 @@ jobs:
     environment: dev
 
     steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Stop Github Runner
         id: stop_runner
-        uses: pagopa/interop-github-runner-aws-cleanup-action@main
+        uses: ./.github/workflows/cleanup
         with:
           aws_region: ${{ vars.AWS_REGION }}
           iam_role_arn: ${{ vars.IAM_ROLE }}
           ecs_cluster_name: ${{ vars.ECS_CLUSTER_NAME }}
           pat_token: ${{ secrets.BOT_TOKEN }}
+          runner_name: ${{ needs.create_runner.outputs.runner_name }}

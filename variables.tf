@@ -15,10 +15,10 @@ variable "ecs_logs_retention_days" {
   default     = 5
 }
 
-# TODO how to manage tag?
-variable "github_runner_tag" {
+variable "github_runner_image" {
   type        = string
-  description = "Image tag of the Github runner"
+  description = "Image of the Github runner"
+  default     = "ghcr.io/pagopa/github-self-hosted-runner-aws:v1.1.0"
 }
 
 variable "github_runner_cpu" {
@@ -39,10 +39,16 @@ variable "vpc_ids" {
   default     = []
 }
 
+variable "ecs_create_cluster" {
+  type        = bool
+  description = "Whether to create ECS cluster in which to run the GitHub runner as task"
+  default     = true
+}
+
 variable "ecs_cluster_name" {
   type        = string
-  description = "ECS cluster to create. If not provided, cluster is not created"
-  default     = ""
+  description = "Name of the ECS cluster in which to run the task. Mandatory if 'ecs_create_cluster' is false"
+  default     = "ghrunner-cluster"
 }
 
 variable "vpc_id" {

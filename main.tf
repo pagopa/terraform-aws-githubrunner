@@ -1,8 +1,10 @@
 
 data "aws_caller_identity" "current" {}
 
+
 # Logs
 
+# log group used by the runner
 resource "aws_cloudwatch_log_group" "ecs_github_runner" {
   name = "github/runners"
 
@@ -13,28 +15,18 @@ resource "aws_cloudwatch_log_group" "ecs_github_runner" {
   }
 }
 
+
 # ECS task definition for the runner
 
-resource "aws_ecr_repository" "runner_ecr" {
-  name                 = "github-runner"
-  image_tag_mutability = "MUTABLE"
-  force_delete         = true
-
-  image_scanning_configuration {
-    scan_on_push = false
-  }
-}
-
-# TODO When you launch task definition you need network config
-
+# cluster in which to run the task, can be created here or not
 resource "aws_ecs_cluster" "ecs_cluster" {
-  count = var.ecs_cluster_name == "" ? 0 : 1
+  count = var.ecs_create_cluster ? 1 : 0
 
   name = var.ecs_cluster_name
 }
 
 resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_capacity" {
-  count = var.ecs_cluster_name == "" ? 0 : 1
+  count = var.ecs_create_cluster ? 1 : 0
 
   cluster_name = aws_ecs_cluster.ecs_cluster[0].name
 
@@ -49,7 +41,7 @@ resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_capacity" {
 
 resource "aws_ecs_task_definition" "github_runner_def" {
   family                   = var.task_name
-  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
+  execution_role_arn       = aws_iam_role.task_execution_github_runner.arn
   task_role_arn            = aws_iam_role.task_github_runner.arn
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
@@ -58,9 +50,8 @@ resource "aws_ecs_task_definition" "github_runner_def" {
 
   container_definitions = jsonencode([
     {
-      name = "githubrunner",
-      # TODO manage tag!
-      image = "${aws_ecr_repository.runner_ecr.repository_url}:${var.github_runner_tag}",
+      name  = "github-runner",
+      image = var.github_runner_image
 
       logConfiguration = {
         logDriver = "awslogs",
@@ -81,16 +72,61 @@ resource "aws_ecs_task_definition" "github_runner_def" {
   }
 }
 
-# Role and policies
 
-resource "aws_iam_role" "task_github_runner" {
-  name = "GithubRunnerRole"
+# IAM roles and policies
+
+resource "aws_iam_role" "task_execution_github_runner" {
+  name        = "TaskExecutionGithubRunnerRole"
+  description = "Role for executing the Github runner (task execution role)"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action = "sts:AssumeRole", # trusted policy
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "task_execution_github_runner" {
+  name = "TaskExecutionGithubRunnerPolicy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      # allow to write logs on CloudWatch
+      {
+        Sid    = "cloudwatch"
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ],
+        Resource = ["*"],
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "task_execution" {
+  policy_arn = aws_iam_policy.task_execution_github_runner.arn
+  role       = aws_iam_role.task_execution_github_runner.name
+}
+
+resource "aws_iam_role" "task_github_runner" {
+  name        = "TaskGithubRunnerRole"
+  description = "Role of the Github runner (task role)"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
         Effect = "Allow",
         Principal = {
           Service = "ecs-tasks.amazonaws.com"
@@ -107,6 +143,7 @@ resource "aws_iam_role_policy_attachment" "role_attachment" {
   role       = aws_iam_role.task_github_runner.name
 }
 
+
 # Security group
 
 resource "aws_security_group" "github_runner" {
@@ -115,7 +152,7 @@ resource "aws_security_group" "github_runner" {
   vpc_id      = var.vpc_id
 }
 
-resource "aws_security_group_rule" "github_runner_to_vault" {
+resource "aws_security_group_rule" "github_runner_rule" {
   for_each = {
     for rule in var.security_group_rules : rule.name => rule
   }
@@ -140,11 +177,17 @@ resource "aws_security_group_rule" "github_runner_to_internet" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
+
 # Role for federating Github access for running the ECS task of the runner
+
+# oidc federation must be already configured in aws
+data "aws_iam_openid_connect_provider" "github_oidc" {
+  url = "https://token.actions.githubusercontent.com"
+}
 
 resource "aws_iam_role" "github_iac" {
   name        = "GitHubActionIACRole"
-  description = "Role to assume to create the infrastructure."
+  description = "Role for invoking the TASK, assumed by GitHub with federated oidc credentials."
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -152,7 +195,7 @@ resource "aws_iam_role" "github_iac" {
       {
         Effect = "Allow",
         Principal = {
-          "Federated" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+          "Federated" : data.aws_iam_openid_connect_provider.github_oidc.arn,
         },
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
@@ -176,16 +219,38 @@ resource "aws_iam_policy" "run_github_runner_ecs_task" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
+      # allow to run task for provisioning Github runner
       {
-        Sid    = "ecr"
         Effect = "Allow",
         Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
+          "ecs:RunTask",
         ],
-        Resource = [aws_ecs_task_definition.github_runner_def.arn]
+        Resource = [aws_ecs_task_definition.github_runner_def.arn],
+      },
+      # allow to stopping task for cleaning up after Github action
+      {
+        Effect = "Allow",
+        Action = [
+          "ecs:StopTask",
+        ],
+        Resource = ["arn:aws:ecs:eu-south-1:${data.aws_caller_identity.current.id}:task/${var.ecs_cluster_name}/*"],
+      },
+      # allow to get resource from tags. needed because we will search task by tag for deleting it
+      {
+        Effect   = "Allow",
+        Action   = ["tag:GetResources"],
+        Resource = ["*"]
+      },
+      # the role needs to be passed to the task role and to the task execution role
+      {
+        Effect = "Allow",
+        Action = [
+          "iam:PassRole",
+        ],
+        Resource = [
+          aws_iam_role.task_github_runner.arn,
+          aws_iam_role.task_execution_github_runner.arn,
+        ],
       },
     ]
   })

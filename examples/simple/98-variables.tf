@@ -5,6 +5,12 @@ variable "aws_region" {
   default     = "eu-south-1"
 }
 
+variable "availability_zones" {
+  type        = list(string)
+  description = "AWS availabiity zones of subnetsregion to create resources"
+  default     = ["eu-south-1a"]
+
+}
 variable "app_name" {
   type        = string
   description = "App name."

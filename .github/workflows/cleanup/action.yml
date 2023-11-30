@@ -1,0 +1,84 @@
+name: "Cleanup GitHub self hosted runner"
+description: "Cleanup a GitHub self hosted runner on AWS"
+
+inputs:
+  aws_region:
+    description: "AWS region code"
+    required: true
+  iam_role_arn:
+    description: "ARN of the IAM role to assume"
+    required: true
+  ecs_cluster_name:
+    description: "ECS cluster"
+    required: true
+  pat_token:
+    description: "GitHub PAT token to access APIs to manage self hosted runner"
+    required: true
+  runner_name:
+    description: "Name of the GitHub runner to remove"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.aws_region }}
+        role-to-assume: ${{ inputs.iam_role_arn }}
+
+    - name: Cleanup GitHub Runner
+      shell: bash
+      id: cleanup_github_runner
+      run: |
+        set -eo pipefail
+
+        GITHUB_RUNNER_ID=$(curl -s \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ inputs.pat_token }}" \
+          https://api.github.com/repos/${{ github.repository }}/actions/runners \
+          | jq '.runners | map(select(.name == "'${{ inputs.runner_name }}'")) | .[].id' -r)
+
+        ECS_TASK_ARN=$(aws resourcegroupstaggingapi get-resources \
+          --region ${{ inputs.aws_region }} \
+          --resource-type-filters ecs:task \
+          --tag-filters Key=runner_name,Values=${{ inputs.runner_name }} \
+          --max-items 1 \
+          | jq --raw-output '.ResourceTagMappingList[].ResourceARN')
+
+        aws ecs stop-task \
+          --cluster ${{ inputs.ecs_cluster_name }} \
+          --task ${ECS_TASK_ARN} > /dev/null
+
+        echo "[INFO] ECS task ${ECS_TASK_ID} stopped"
+
+        curl -s \
+          -X DELETE \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ inputs.pat_token }}" \
+          https://api.github.com/repos/${{ github.repository }}/actions/runners/${GITHUB_RUNNER_ID}
+
+        START_TIME=$(date +%s)
+        while [ $(( $(date +%s) - 120 )) -lt $START_TIME ]; do
+
+          echo "[INFO] Waiting for runner ${{ inputs.runner_name }} to be deleted from Github"
+
+          GITHUB_RUNNER_ID=$(curl -s \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ inputs.pat_token }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/runners \
+            | jq '.runners | map(select(.name == "'${{ inputs.runner_name }}'")) | .[].id' -r)
+
+          if [ -z "$GITHUB_RUNNER_ID" ]; then
+            echo "[INFO] Runner ${{ inputs.runner_name }} has been deleted"
+            break
+          fi
+
+          sleep 10
+
+        done
+
+        if [ -n "$GITHUB_RUNNER_ID" ]; then
+          echo "[ERROR] Runner ${{ inputs.runner_name }} was not deleted from Github" >&2
+          exit 1
+        fi
