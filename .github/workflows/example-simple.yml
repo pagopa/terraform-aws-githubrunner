@@ -21,23 +21,15 @@ jobs:
     name: Create Self-Hosted Runner
     runs-on: ubuntu-22.04
     strategy:
-      matrix:
-        index: [1]
       fail-fast: true
     environment: ${{ inputs.environment }}
     outputs:
       runner_name: ${{ steps.start_runner.outputs.runner_name }}
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: Start GitHub Runner
         id: start_runner
-        uses: ./.github/workflows/runner
+        uses: pagopa/eng-github-actions-iac-template/aws/create-github-runner-aws-action@v1.6.0
         with:
           aws_region: ${{ vars.AWS_REGION }}
           iam_role_arn: ${{ vars.IAM_ROLE }}
@@ -62,8 +54,6 @@ jobs:
     name: Delete Self-Hosted Runner
     needs: [create_runner, list_s3_buckets]
     strategy:
-      matrix:
-        index: [1]
       fail-fast: true
     if: ${{ always() }}
     runs-on: ubuntu-22.04
@@ -78,7 +68,7 @@ jobs:
           persist-credentials: false
       - name: Stop Github Runner
         id: stop_runner
-        uses: ./.github/workflows/cleanup
+        uses: pagopa/eng-github-actions-iac-template/aws/remove-github-runner-aws-action@v1.6.0
         with:
           aws_region: ${{ vars.AWS_REGION }}
           iam_role_arn: ${{ vars.IAM_ROLE }}
